@@ -1,10 +1,10 @@
+import time
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchvision
-import torchvision.transforms as transforms
 import torchvision.models as models
-import time
+import torchvision.transforms as transforms
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
@@ -95,6 +95,8 @@ for epoch in range(2):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
+
+torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
 
 dataiter = iter(testloader)
 images, labels = dataiter.next()

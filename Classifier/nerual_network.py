@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -7,6 +8,21 @@ import torchvision.models as models
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
 import os
+
+from Tensorboard import Logger
+
+log_dir = '/Users/SirJerrick/Documents/logs'
+
+now = datetime.now()
+
+nowstr = now.isoformat()
+
+run_path = os.path.join(log_dir, nowstr)
+
+os.mkdir(run_path)
+
+logger = Logger(run_path)
+
 
 train_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/train'
 val_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/val'
@@ -78,6 +94,8 @@ start_time = time.time()
 
 img_cnt = len(trainloader)
 
+step = 0
+
 for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -111,10 +129,17 @@ for epoch in range(2):  # loop over the dataset multiple times
                 stats.append("{}%".format(100 * i / img_cnt))
                 print(stats)
 
+        info = {'Loss': loss.item()}
+
+        for tag, value in info.items():
+            logger.scalar_summary(tag, value, step + 1)
+
         if i % 2000 == 1999:    # print every 2000 mini-batches
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
+
+        step += 1
 
 print('Finished Training')
 

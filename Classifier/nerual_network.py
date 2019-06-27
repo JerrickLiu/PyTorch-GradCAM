@@ -4,30 +4,47 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.models as models
-import torchvision.transforms as transforms
+from torchvision import transforms, datasets
+from torch.utils.data import DataLoader
+import os
 
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+train_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/train'
+val_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/val'
+test_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/testset'
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,
-                                          shuffle=True, num_workers=2)
+train_transform = transforms.Compose(
+    [transforms.RandomHorizontalFlip(),
+     transforms.RandomRotation(30),
+     transforms.RandomVerticalFlip(),
+     transforms.RandomResizedCrop(224),
+     transforms.ToTensor(),
+     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+     ])
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=4,
-                                         shuffle=False, num_workers=2)
+test_transform = transforms.Compose([
+    transforms.CenterCrop((224,224)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    ])
 
-classes = ('plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+batch_size = 4
+
+trainset = datasets.ImageFolder(root=train_dir, transform=train_transform)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                          shuffle=True, num_workers=4)
+val_set = torchvision.datasets.ImageFolder(root = val_dir, transform = test_transform)
+val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
+                                             shuffle = True, num_workers = 4 )
+
+testset = torchvision.datasets.ImageFolder(root=test_dir, transform=test_transform)
+testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+                                         shuffle=False, num_workers=4)
+classes = ('cat', 'dog')
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-# functions to show an image
-
+#functions to show an image
 
 def imshow(img):
     img = img / 2 + 0.5     # unnormalize
@@ -45,13 +62,17 @@ imshow(torchvision.utils.make_grid(images))
 # print labels
 print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
-model = models.vgg19(pretrained = True)
-print(model)
+model = models.resnet50(pretrained=True)
+
+for param in model.parameters():
+    param.requires_grad = False
+
+model.fc = nn.Linear(in_features = 2048, out_features= 2)
 
 import torch.optim as optim
 
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.0005, momentum=0.9)
+loss_function = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 start_time = time.time()
 
@@ -61,6 +82,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
+        model.train()
         # get the inputs
         inputs, labels = data
 
@@ -68,8 +90,8 @@ for epoch in range(2):  # loop over the dataset multiple times
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        prediction = model(inputs)
+        loss = loss_function(prediction, labels)
         loss.backward()
         optimizer.step()
 
@@ -98,7 +120,7 @@ print('Finished Training')
 
 torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
 
-dataiter = iter(testloader)
+dataiter = iter(val_loader)
 images, labels = dataiter.next()
 
 imshow(torchvision.utils.make_grid(images))
@@ -113,21 +135,23 @@ print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
 correct = 0
 total = 0
 with torch.no_grad():
+    model.eval()
     print("Testing...")
-    for data in testloader:
+    for data in val_loader:
         images, labels = data
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
 
-print('Accuracy of the network on the 10000 test images: %d %%' % (
+print('Accuracy of the network on test images: %d %%' % (
     100 * correct / total))
 
 class_correct = list(0. for i in range(10))
 class_total = list(0. for i in range(10))
 with torch.no_grad():
-    for data in testloader:
+    model.eval()
+    for data in val_loader:
         images, labels = data
         outputs = model(images)
         _, predicted = torch.max(outputs, 1)

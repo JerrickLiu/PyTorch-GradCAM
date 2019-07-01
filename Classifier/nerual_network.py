@@ -23,7 +23,6 @@ os.mkdir(run_path)
 
 logger = Logger(run_path)
 
-
 train_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/train'
 val_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/val'
 test_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/testset'
@@ -38,32 +37,35 @@ train_transform = transforms.Compose(
      ])
 
 test_transform = transforms.Compose([
-    transforms.CenterCrop((224,224)),
+    transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-    ])
+])
 
 batch_size = 4
 
 trainset = datasets.ImageFolder(root=train_dir, transform=train_transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                           shuffle=True, num_workers=4)
-val_set = torchvision.datasets.ImageFolder(root = val_dir, transform = test_transform)
+val_set = torchvision.datasets.ImageFolder(root=val_dir, transform=test_transform)
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
-                                             shuffle = True, num_workers = 4 )
+                                         shuffle=True, num_workers=4)
 
 testset = torchvision.datasets.ImageFolder(root=test_dir, transform=test_transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=4)
 classes = ('cat', 'dog')
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-#functions to show an image
+
+# functions to show an image
 
 def imshow(img):
-    img = img / 2 + 0.5     # unnormalize
+    img = img / 2 + 0.5  # unnormalize
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show()
@@ -83,12 +85,40 @@ model = models.resnet50(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
 
-model.fc = nn.Linear(in_features = 2048, out_features= 2)
+model.fc = nn.Linear(in_features=2048, out_features=2)
+
+if device == "cuda":
+    model.cuda()
 
 import torch.optim as optim
 
 loss_function = nn.CrossEntropyLoss()
+'''
+Using the cross-entropy function along with the softmax function, we are able to calculate the loss of the model.
+It calculates loss by taking the log-softmax probabilities of its prediction. The softmax function normalizes the
+probabilities which results in the probabilities sum to 1. Cross entropy loss, or log loss then measures those
+outputted probabilities with respect to the true label. Cross entropy loss increases as the predicted probability
+diverges from the actual label, with the true label being 1.
+This is me just trying to explain it to myself
+'''
+
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
+
+"""
+An optimizer is an algorithm that updates the weights and parameters of the nerual network
+in response to the output of the loss function explained above. The loss function tells the optimizer
+if its moving in the right direction and the optimizer updates the network's weights in response. If
+the loss is decreasing, then the optimizer is doing a good job. The most common algorithm is
+gradient descent. Gradient descents seeks to find the minimum of the loss function. In gradient descent, we:
+1.) Calculate how much a small change in each individual weight would do to the loss function
+2.) Adjust each weight based on its gradient. A gradient is a partial derivative that measure
+the change in loss with respect to the change in the weights. The gradients of the weights tell
+us what to do with the weights - add .5 or subtract .1 for example - which will decrease loss and make the model more accurate.
+3.) Repeat steps 1 and 2 until loss is as low as possible. 
+Keep in mind that this is for the weights of only 1 layer. In a model like Resnet50 that has 50 layers and millions of weights,
+the optimizer performs the process and calculates the gradient for all the weights in each layer, and application of the chain rule. 
+"""
+
 
 start_time = time.time()
 
@@ -103,22 +133,24 @@ for epoch in range(2):  # loop over the dataset multiple times
         model.train()
         # get the inputs
         inputs, labels = data
+        inputs, labes = inputs.to(device), labels.to(device)
 
-        # zero the parameter gradients
+        # zero the parameter gradients, so no previous gradients are stored and will not build up.
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        prediction = model(inputs)
-        loss = loss_function(prediction, labels)
-        loss.backward()
-        optimizer.step()
+        prediction = model(inputs)  #Forward. In other words, the machine makes a prediction. In machine learning, this is called forward propagating.
+        loss = loss_function(prediction, labels) #Calculate the loss of the prediction.
+        print(loss)
+        loss.backward() #Backpropagation takes the output of the loss function and uses it to compute the gradients of the weights.
+        optimizer.step() #Updates the weights based on the gradient.
 
         end_time = time.time()
 
         # print statistics
         running_loss += loss.item()
 
-        stats =[]
+        stats = []
 
         if i > 0:
             average_loss = running_loss / i
@@ -134,7 +166,7 @@ for epoch in range(2):  # loop over the dataset multiple times
         for tag, value in info.items():
             logger.scalar_summary(tag, value, step + 1)
 
-        if i % 2000 == 1999:    # print every 2000 mini-batches
+        if i % 2000 == 1999:  # print every 2000 mini-batches
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
@@ -149,7 +181,7 @@ dataiter = iter(val_loader)
 images, labels = dataiter.next()
 
 imshow(torchvision.utils.make_grid(images))
-print('GroundTruth: ', ' '.join('%5s' %classes[labels[j]] for j in range(4)))
+print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 outputs = model(images)
 _, predicted = torch.max(outputs, 1)
@@ -170,10 +202,10 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
 
 print('Accuracy of the network on test images: %d %%' % (
-    100 * correct / total))
+        100 * correct / total))
 
-class_correct = list(0. for i in range(10))
-class_total = list(0. for i in range(10))
+class_correct = list(0. for i in range(2))
+class_total = list(0. for i in range(2))
 with torch.no_grad():
     model.eval()
     for data in val_loader:
@@ -185,7 +217,6 @@ with torch.no_grad():
             label = labels[i]
             class_correct[label] += c[i].item()
             class_total[label] += 1
-
 
 for i in range(10):
     print('Accuracy of %5s : %2d %%' % (

@@ -108,15 +108,25 @@ optimizer = optim.Adam(model.parameters(), lr=0.0005)
 An optimizer is an algorithm that updates the weights and parameters of the nerual network
 in response to the output of the loss function explained above. The loss function tells the optimizer
 if its moving in the right direction and the optimizer updates the network's weights in response. If
-the loss is decreasing, then the optimizer is doing a good job. The most common algorithm is
-gradient descent. Gradient descents seeks to find the minimum of the loss function. In gradient descent, we:
+the loss is decreasing, then the optimizer is doing a good job. In order to actually calculate the gradient, we do 
+backpropagation. Backpropagation, combined with optimization, is basically how a machine learns. Backpropagation 
+involves taking the loss found in the loss function and sending it backwards through the network so the optimizer 
+can alter the weights and parameters. Backpropagataion works by calculating a gradient (think slope) of each parameter 
+in the network. We use differential calculus to find the gradient. In our case, we want to find the change in loss with 
+respect to the change in a weight and we want to move both variables in the direction of less loss. Once we
+know the direction, the optimizer updates the weights in accordance to the direction of less loss. The most common 
+algorithm is gradient descent. Gradient descents seeks to find the minimum of the loss function. 
+In gradient descent, we:
 1.) Calculate how much a small change in each individual weight would do to the loss function
 2.) Adjust each weight based on its gradient. A gradient is a partial derivative that measure
 the change in loss with respect to the change in the weights. The gradients of the weights tell
-us what to do with the weights - add .5 or subtract .1 for example - which will decrease loss and make the model more accurate.
+us what to do with the weights - add .5 or subtract .1 for example - which will decrease loss and make the model more 
+accurate.
 3.) Repeat steps 1 and 2 until loss is as low as possible. 
-Keep in mind that this is for the weights of only 1 layer. In a model like Resnet50 that has 50 layers and millions of weights,
-the optimizer performs the process and calculates the gradient for all the weights in each layer, and application of the chain rule. 
+Keep in mind that this is for the weights of only 1 layer. In a model like Resnet50 that has 50 layers and millions of 
+weights,
+gradient descent and the optimizer performs the process and calculates the gradient for all the weights in each layer, 
+an application of the chain rule. 
 """
 
 

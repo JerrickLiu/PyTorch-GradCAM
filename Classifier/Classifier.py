@@ -24,12 +24,6 @@ from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_sc
 from torchvision.transforms import Compose, ToTensor, Normalize, Resize
 
 
-def resnet18(pretrained=False, **kwargs):
-    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
-    return model
-
 data_set_path = '/home/jerrick/Desktop/dogs-vs-cats/train/'
 
 batch_size = 100
@@ -98,9 +92,11 @@ def forward(self, x):
     x = self.bn1(x)
     return x
 
+device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
-model = models.resnet18(pretrained = True)
-#model.cuda()
+model = models.resnet50(pretrained = True)
+model = model.to(device)
+
 
 epochs = 2
 
@@ -108,7 +104,6 @@ loss_function = nn.CrossEntropyLoss()
 optimizer = optim.Adadelta(model.parameters())
 
 start_ts = time.time()
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 losses = []
 batches = len(train_loader)

@@ -81,6 +81,10 @@ print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 model = models.resnet50(pretrained=True)
 
+# Because ResNet is an already pretrained model on ImageNet, we set the parameters of
+# the model to not store a gradient to save memory. However, in order to do our
+# specific tasks or other tasks in the future, some parameters will still have
+# a gradient stored and will be used in backpropagation
 for param in model.parameters():
     param.requires_grad = False
 
@@ -126,6 +130,8 @@ Keep in mind that this is for the weights of only 1 layer. In a model like Resne
 weights,
 gradient descent and the optimizer performs the process and calculates the gradient for all the weights in each layer, 
 an application of the chain rule. 
+In our case, we are using the Adam optimizer because it can adapt the learning rate for each parameter individually
+which will increase accuracy and decrease loss. 
 """
 
 
@@ -173,7 +179,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
             if average_loss < best_val_loss:
                 best_val_loss = average_loss
-                torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
+                torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models/ResNet_cats_dogs.pth')
 
         info = {'Loss': loss.item()}
 

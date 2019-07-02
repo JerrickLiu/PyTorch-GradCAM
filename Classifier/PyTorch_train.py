@@ -90,8 +90,7 @@ for param in model.parameters():
 
 model.fc = nn.Linear(in_features=2048, out_features=len(classes))
 
-if device == "cuda":
-    model.cuda()
+model.to(device)
 
 import torch.optim as optim
 

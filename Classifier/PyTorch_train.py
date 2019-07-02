@@ -25,7 +25,6 @@ logger = Logger(run_path)
 
 train_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/train'
 val_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/val'
-test_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/testset'
 
 train_transform = transforms.Compose(
     [transforms.RandomHorizontalFlip(),
@@ -49,11 +48,11 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                           shuffle=True, num_workers=4)
 val_set = torchvision.datasets.ImageFolder(root=val_dir, transform=test_transform)
 val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size,
-                                         shuffle=True, num_workers=4)
-
-testset = torchvision.datasets.ImageFolder(root=test_dir, transform=test_transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=4)
+
+print('Number of training samples: ', len(trainset))
+print('Number of validation samples: ', len(val_set))
+
 classes = ('cat', 'dog')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -85,7 +84,7 @@ model = models.resnet50(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
 
-model.fc = nn.Linear(in_features=2048, out_features=2)
+model.fc = nn.Linear(in_features=2048, out_features=len(classes))
 
 if device == "cuda":
     model.cuda()
@@ -136,14 +135,16 @@ img_cnt = len(trainloader)
 
 step = 0
 
+best_val_loss = float('inf')
+
 for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        model.train()
+    model.train()
+
+    for inputs, labels in trainloader:
         # get the inputs
-        inputs, labels = data
-        inputs, labes = inputs.to(device), labels.to(device)
+        inputs, labels = inputs.to(device), labels.to(device)
 
         # zero the parameter gradients, so no previous gradients are stored and will not build up.
         optimizer.zero_grad()
@@ -161,30 +162,27 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         stats = []
 
-        if i > 0:
-            average_loss = running_loss / i
+        if step > 0:
+            average_loss = running_loss / step
 
             if end_time > start_time:
                 stats.append("Epoch: {}".format(epoch))
                 stats.append("Average loss: {}".format(average_loss))
-                stats.append("{}%".format(100 * i / img_cnt))
+                stats.append("{}%".format(100 * step / img_cnt))
                 print(stats)
+
+            if average_loss < best_val_loss:
+                best_val_loss = average_loss
+                torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
 
         info = {'Loss': loss.item()}
 
         for tag, value in info.items():
             logger.scalar_summary(tag, value, step + 1)
 
-        if i % 2000 == 1999:  # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
-            running_loss = 0.0
-
         step += 1
 
 print('Finished Training')
-
-torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
 
 dataiter = iter(val_loader)
 images, labels = dataiter.next()
@@ -205,7 +203,7 @@ with torch.no_grad():
     model.eval()
     print("Testing...")
     for data in val_loader:
-        images, labels = data
+        inputs, labels = data
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -214,12 +212,14 @@ with torch.no_grad():
 print('Accuracy of the network on test images: %d %%' % (
         100 * correct / total))
 
-class_correct = list(0. for i in range(2))
-class_total = list(0. for i in range(2))
+class_correct = list(0. for i in range(len(classes)))
+class_total = list(0. for i in range(len(classes)))
+
+
 with torch.no_grad():
     model.eval()
     for data in val_loader:
-        images, labels = data
+        inputs, labels = data
         outputs = model(images)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()

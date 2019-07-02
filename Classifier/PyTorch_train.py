@@ -150,8 +150,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # forward + backward + optimize
         prediction = model(inputs)  #Forward. In other words, the machine makes a prediction. In machine learning, this is called forward propagating.
-        loss = loss_function(prediction, labels) #Calculate the loss of the prediction.
-        print(loss)
+        loss = loss_function(prediction, labels) #Calculate the loss of the prediction
         loss.backward() #Backpropagation takes the output of the loss function and uses it to compute the gradients of the weights.
         optimizer.step() #Updates the weights based on the gradient.
 
@@ -189,6 +188,7 @@ torch.save(model.state_dict(), '/Users/SirJerrick/Documents/Saved_models')
 
 dataiter = iter(val_loader)
 images, labels = dataiter.next()
+images, labels = images.to(device), labels.to(device)
 
 imshow(torchvision.utils.make_grid(images))
 print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))

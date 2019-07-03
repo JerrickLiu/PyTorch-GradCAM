@@ -81,12 +81,8 @@ print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 model = models.resnet50(pretrained=True)
 
-# Because ResNet is an already pretrained model on ImageNet, we set the parameters of
-# the model to not store a gradient to save memory. However, in order to do our
-# specific tasks or other tasks in the future, some parameters will still have
-# a gradient stored and will be used in backpropagation
-for param in model.parameters():
-    param.requires_grad = False
+if torch.cuda.device_count() > 1:
+    model = nn.DataParallel(model)
 
 model.fc = nn.Linear(in_features=2048, out_features=len(classes))
 
@@ -138,12 +134,11 @@ start_time = time.time()
 
 img_cnt = len(trainloader)
 
-step = 0
-
 best_val_loss = float('inf')
 
 for epoch in range(2):  # loop over the dataset multiple times
 
+    step = 0
     running_loss = 0.0
     model.train()
 
@@ -189,26 +184,15 @@ for epoch in range(2):  # loop over the dataset multiple times
 
 print('Finished Training')
 
-dataiter = iter(val_loader)
-images, labels = dataiter.next()
-images, labels = images.to(device), labels.to(device)
-
-imshow(torchvision.utils.make_grid(images))
-print('GroundTruth: ', ' '.join('%5s' % classes[labels[j]] for j in range(4)))
-
-outputs = model(images)
-_, predicted = torch.max(outputs, 1)
-
-print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
-                              for j in range(4)))
-
 correct = 0
 total = 0
+
 with torch.no_grad():
     model.eval()
     print("Testing...")
     for data in val_loader:
         inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -225,6 +209,7 @@ with torch.no_grad():
     model.eval()
     for data in val_loader:
         inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
         outputs = model(images)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()

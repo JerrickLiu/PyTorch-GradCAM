@@ -36,7 +36,7 @@ train_transform = transforms.Compose(
      ])
 
 test_transform = transforms.Compose([
-    transforms.CenterCrop((224, 224)),
+    transforms.CenterCrop((224)),
     transforms.ToTensor(),
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 ])
@@ -68,16 +68,6 @@ def imshow(img):
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
     plt.show()
-
-
-# get some random training images
-dataiter = iter(trainloader)
-images, labels = dataiter.next()
-
-# show images
-imshow(torchvision.utils.make_grid(images))
-# print labels
-print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 model = models.resnet50(pretrained=True)
 
@@ -136,7 +126,9 @@ img_cnt = len(trainloader)
 
 best_val_loss = float('inf')
 
-for epoch in range(2):  # loop over the dataset multiple times
+num_epochs = 1
+
+for epoch in range(num_epochs):  # loop over the dataset multiple times
 
     step = 0
     running_loss = 0.0
@@ -184,6 +176,19 @@ for epoch in range(2):  # loop over the dataset multiple times
 
 print('Finished Training')
 
+# get some random training images
+dataiter = iter(trainloader)
+image, labels = dataiter.next()
+outputs = model(image)
+
+# show images
+imshow(torchvision.utils.make_grid(image))
+# print labels
+_, prediction = torch.max(outputs, 1)
+predictions = np.squeeze(prediction.numpy())
+print('Actual: ', labels[:10])
+print('Predicted: ', predictions[:10])
+
 correct = 0
 total = 0
 
@@ -191,8 +196,8 @@ with torch.no_grad():
     model.eval()
     print("Testing...")
     for data in val_loader:
-        inputs, labels = data
-        inputs, labels = inputs.to(device), labels.to(device)
+        images, labels = data
+        images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -208,8 +213,8 @@ class_total = list(0. for i in range(len(classes)))
 with torch.no_grad():
     model.eval()
     for data in val_loader:
-        inputs, labels = data
-        inputs, labels = inputs.to(device), labels.to(device)
+        images, labels = data
+        images, labels = images.to(device), labels.to(device)
         outputs = model(images)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()

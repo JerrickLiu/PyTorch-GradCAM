@@ -16,7 +16,7 @@ def mask(path = '/home/jerrick/Documents/Projects/For_Jerrick/data/all_sand/sand
                 gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 i += 1
                 ret, thresh = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
+                cv2.imwrite('/home/jerrick/Documents/Projects/For_Jerrick/data/all_sand/sand_0/2S1_masks/2S1_mask{}'.format(i))
                 cv2.imshow('image', thresh)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()

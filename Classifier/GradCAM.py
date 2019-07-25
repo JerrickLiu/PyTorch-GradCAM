@@ -43,18 +43,24 @@ class ModelOutputs():
 
     def __init__(self, model, target_layers):
         self.model = model
-        self.feature_extractor = FeatureExtractor(self.model.features, target_layers)
-
+        if args.model == 'vgg19':
+            self.feature_extractor = FeatureExtractor(self.model.features, target_layers)
+        elif args.model == 'resnet50':
+            self.feature_extractor = FeatureExtractor(self.model, target_layers)
+        else:
+            self.feature_extractor = FeatureExtractor(self.model,  target_layers)
     def get_gradients(self):
         return self.feature_extractor.gradients
 
     def __call__(self, x):
         target_activations, output = self.feature_extractor(x)
         output = output.view(output.size(0), -1)
-        if model == 'vgg19':
+        if args.model == 'vgg19':
             output = self.model.classifier(output)
-        elif model == 'resnet50':
-            output = self.model.fc(output)
+        elif args.model == 'resnet50':
+            output = resnet.fc(output)
+        else:
+            output = self.model.classifier(output)
         return target_activations, output
 
 
@@ -112,8 +118,12 @@ class GradCam:
         else:
             one_hot = torch.sum(one_hot * output)
 
-        self.model.features.zero_grad()
-        self.model.classifier.zero_grad()
+        if args.model == 'vgg19':
+            self.model.features.zero_grad()
+            self.model.classifier.zero_grad()
+        if args.model == 'resnet50':
+            self.model.zero_grad()
+
         one_hot.backward(retain_graph=True)
 
         grads_val = self.extractor.get_gradients()[-1].cpu().data.numpy()
@@ -204,7 +214,7 @@ def get_args():
                         help='Use NVIDIA GPU acceleration')
     parser.add_argument('--image-path', type=str, default='/Users/SirJerrick/Downloads/images/',
                         help='Input image path')
-    parser.add_argument('--model', type=str, default = 'vgg19')
+    parser.add_argument('--model', type=str, default = 'densenet121')
 
     args = parser.parse_args()
     args.use_cuda = args.use_cuda and torch.cuda.is_available()
@@ -236,6 +246,7 @@ if __name__ == '__main__':
         if args.model == 'vgg19':
             model = models.vgg19(pretrained = True)
         elif args.model == 'resnet50':
+            resnet = models.resnet50(pretrained=True)
             model = models.resnet50(pretrained=True)
         elif args.model == 'densenet121':
             model =models.densenet121(pretrained=True)
@@ -254,7 +265,11 @@ if __name__ == '__main__':
         grad_cam = GradCam(model = model,
                            target_layer_names=['layer4'], use_cuda=args.use_cuda)
 
+    if args.model == 'densenet121':
+        grad_cam = GradCam(model = model, target_layer_names=['denselayer16'], use_cuda=args.use_cuda)
+
     x = os.walk(args.image_path)
+
     for root, dirs, filename in x:
         # print(type(grad_cam))
         print(filename)
@@ -275,14 +290,3 @@ if __name__ == '__main__':
             i +=1
 
             show_cam_on_image(img, mask, i)
-
-    # gb_model = GuidedBackpropReLUModel(model=model, use_cuda=args.use_cuda)
-    # gb = gb_model(input, index=target_index)
-    # utils.save_image(torch.from_numpy(gb), 'gb.jpg')
-    #
-    # cam_mask = np.zeros(gb.shape)
-    # for i in range(0, gb.shape[0]):
-    #     cam_mask[i, :, :] = mask
-    #
-    # cam_gb = np.multiply(cam_mask, gb)
-    # utils.save_image(torch.from_numpy(cam_gb), 'cam_gb.jpg')

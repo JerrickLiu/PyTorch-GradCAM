@@ -2,7 +2,7 @@ import cv2
 import os
 
 
-def image_enhancer(path = '/home/jerrick/Documents/Projects/For_Jerrick/data/4in_test_asphalt/test/2S1'):
+def image_enhancer(path = '/path/of/images/you/want/enhanced'):
     i = 0
     for root, dirs, filename in os.walk(path):
         for file in filename:
@@ -15,6 +15,6 @@ def image_enhancer(path = '/home/jerrick/Documents/Projects/For_Jerrick/data/4in
             limg = cv2.merge((cl,a,b))
             final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
             i += 1
-            cv2.imwrite('/home/jerrick/Documents/Projects/For_Jerrick/data/enhanced_4in_test_asphalt/test/2S1/enhance_4in_asphalt{}.png'.format(i), final)
+            cv2.imwrite('/folder/to/save/images/image{}.png'.format(i), final)
 
 image_enhancer()

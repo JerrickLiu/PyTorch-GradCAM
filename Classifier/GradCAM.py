@@ -85,7 +85,7 @@ def show_cam_on_image(img, mask, name):
     heatmap = np.float32(heatmap) / 255
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
-    cv2.imwrite("/Users/SirJerrick/Documents/results/cam{}.jpg".format(name), np.uint8(255 * cam))
+    cv2.imwrite("/path/to/output/folder/cam{}.jpg".format(name), np.uint8(255 * cam))
 
 
 class GradCam:
@@ -147,8 +147,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use-cuda', action='store_true', default=False,
                         help='Use NVIDIA GPU acceleration')
-    parser.add_argument('--image-path', type=str, default='/Users/SirJerrick/Downloads/images/',
-                        help='Input image path')
+    parser.add_argument('--image-path', type=str, default='None',
+			required = True, help='Input image path')
     parser.add_argument('--model', type=str, default = 'densenet121')
 
     args = parser.parse_args()
@@ -162,7 +162,7 @@ def get_args():
 
 
 if __name__ == '__main__':
-    """ python grad_cam.py <path_to_image>
+    """ python grad_cam.py <path_to_dir_of_images>
 	1. Loads an image with opencv.
 	2. Preprocesses it for VGG19 and converts to a pytorch variable.
 	3. Makes a forward pass to find the category index with the highest score,
@@ -174,6 +174,9 @@ if __name__ == '__main__':
     # Can work with any model, but it assumes that the model has a
     # feature method, and a classifier method,
     # as in the VGG models in torchvision.
+
+    # TODO: Add code to be able to load pytorch model
+	
     saved_model = False
 
     if not saved_model:

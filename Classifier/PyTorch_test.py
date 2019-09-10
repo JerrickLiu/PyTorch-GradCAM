@@ -9,20 +9,20 @@ from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
 import os
 
-# from Tensorboard import Logger
-#
-# log_dir = '/Users/SirJerrick/Documents/logs'
-#
-# now = datetime.now()
-#
-# nowstr = now.isoformat()
-#
-# run_path = os.path.join(log_dir, nowstr)
-#
-# os.mkdir(run_path)
-#
-# logger = Logger(run_path)
-#
+from Tensorboard import Logger
+
+log_dir = '/Users/SirJerrick/Documents/logs'
+
+now = datetime.now()
+
+nowstr = now.isoformat()
+
+run_path = os.path.join(log_dir, nowstr)
+
+os.mkdir(run_path)
+
+logger = Logger(run_path)
+
 test_dir = '/path/to/test/data'
 
 test_transform = transforms.Compose([

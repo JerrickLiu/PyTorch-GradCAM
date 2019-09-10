@@ -50,7 +50,7 @@ def generate_image_as_background(path = '/same/path',
     for root, dirs, filename in os.walk(sand_path):
         for file in filename:
             new_image_path = os.path.join(root, file)
-            images.append(new_iamge_path)
+            images.append(new_image_path)
     for root, dirs, filename in os.walk(path):
         for file in sorted(filename):
             bg_img = cv2.imread(random.choice(images))

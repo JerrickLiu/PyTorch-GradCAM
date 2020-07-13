@@ -6,7 +6,7 @@ import fnmatch
 import random
 
 
-def mask(path = '/Users/SirJerrick/Downloads/images'):
+def mask(path = '/path/to/your/images/'):
     for root, dirs, filename in os.walk(path):
         for file in filename:
             new_path = os.path.join(root, file)

@@ -11,7 +11,7 @@ import os
 
 from Tensorboard import Logger
 
-log_dir = '/Users/SirJerrick/Documents/logs'
+log_dir = '/path/to/where/you/want/logs/stored/'
 
 now = datetime.now()
 
@@ -23,8 +23,8 @@ os.mkdir(run_path)
 
 logger = Logger(run_path)
 
-train_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/train'
-val_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset/val'
+train_dir = "/path/to/where/train_set/is"
+val_dir = "/path/to/where/val_set/is"
 
 train_transform = transforms.Compose(
     [transforms.RandomHorizontalFlip(),

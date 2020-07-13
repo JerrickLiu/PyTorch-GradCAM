@@ -10,6 +10,7 @@ Tensorflow
 
 Numpy
 
+OpenCV2
 ## Installation 
 
 Clone this repo and do
@@ -18,5 +19,5 @@ Clone this repo and do
 pip install -r requirements.txt
 ```
 
-to install necessary packages for this 
+to install necessary packages for this project
 

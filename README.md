@@ -12,4 +12,11 @@ Numpy
 
 ## Installation 
 
+Clone this repo and do
+
+```bash
+pip install -r requirements.txt
+```
+
+to install necessary packages for this 
 

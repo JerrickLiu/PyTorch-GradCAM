@@ -1,4 +1,3 @@
-python
-cv2
 tensorflow
 pytorch
+cv2

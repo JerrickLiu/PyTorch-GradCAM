@@ -2,7 +2,7 @@ import os
 import shutil
 import random
 
-def moving_files_with_specific_name(cur_dir = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/dog', dest = '/Users/SirJerrick/Downloads/data/dogs-vs-cats/cat'):
+def moving_files_with_specific_name(cur_dir, dest):
     for root, dir, filename in os.walk(cur_dir):
         for file in filename:
             if file.startswith('cat'):
@@ -64,7 +64,7 @@ def make_validation_set_from_train_set(train_path, percent, val_dirname = 'val')
 def main():
     #moving_files_with_specific_name()
     #print("Moved files!")
-    make_validation_set_from_train_set('/Users/SirJerrick/Downloads/data/dogs-vs-cats/trainset', percent = 20)
+    make_validation_set_from_train_set('./dataset, percent = 20)
 
 if __name__ == '__main__':
     main()

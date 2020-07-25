@@ -35,11 +35,15 @@ class FeatureExtractor():
         return outputs, x
 
 
-class ModelOutputs():
+class ModelOutputs:
+
     """ Class for making a forward pass, and getting:
-	1. The network output.
-	2. Activations from intermeddiate targetted layers.
-	3. Gradients from intermeddiate targetted layers. """
+
+    1. The network output.
+    2. Activations from intermeddiate targetted layers.
+    3. Gradients from intermeddiate targetted layers.
+
+    """
 
     def __init__(self, model, target_layers):
         self.model = model
@@ -80,12 +84,12 @@ def preprocess_image(img):
     return input
 
 
-def show_cam_on_image(img, mask, name):
+def show_cam_on_image(img, mask, name, path):
     heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
     heatmap = np.float32(heatmap) / 255
     cam = heatmap + np.float32(img)
     cam = cam / np.max(cam)
-    cv2.imwrite("/path/to/output/folder/cam{}.jpg".format(name), np.uint8(255 * cam))
+    cv2.imwrite(path + "/cam{}.jpg".format(name), np.uint8(255 * cam))
 
 
 class GradCam:
@@ -144,15 +148,17 @@ class GradCam:
         return cam
 
 def get_args():
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use-cuda', action='store_true', default=False,
+    parser.add_argument('--use_cuda', action='store_true', default=False,
                         help='Use NVIDIA GPU acceleration')
-    parser.add_argument('--image-path', type=str, default='None',
-			required = True, help='Input image path')
-    parser.add_argument('--model', type=str, default = 'densenet121')
+    parser.add_argument('--image_path', type=str, default=None, required = True, help='Input image path')
+    parser.add_argument('--save_image_path', type=str, default=None, required=True, help='Directory to output gradcam images')
+    parser.add_argument('--model', type=str, default = 'vgg19')
 
     args = parser.parse_args()
     args.use_cuda = args.use_cuda and torch.cuda.is_available()
+
     if args.use_cuda:
         print("Using GPU for acceleration")
     else:
@@ -162,12 +168,15 @@ def get_args():
 
 
 if __name__ == '__main__':
-    """ python grad_cam.py <path_to_dir_of_images>
-	1. Loads an image with opencv.
-	2. Preprocesses it for VGG19 and converts to a pytorch variable.
-	3. Makes a forward pass to find the category index with the highest score,
-	and computes intermediate activations.
-	Makes the visualization. """
+
+    """ 
+    1. Loads an image with opencv.
+    2. Preprocesses it for VGG19 and converts to a pytorch variable.
+    3. Makes a forward pass to find the category index with the highest score,
+    and computes intermediate activations.
+    Makes the visualization. 
+
+    """
 
     args = get_args()
 
@@ -176,7 +185,7 @@ if __name__ == '__main__':
     # as in the VGG models in torchvision.
 
     # TODO: Add code to be able to load pytorch model
-	
+
     saved_model = False
 
     if not saved_model:
@@ -206,14 +215,14 @@ if __name__ == '__main__':
     if args.model == 'densenet121':
         grad_cam = GradCam(model = model, target_layer_names=['denselayer16'], use_cuda=args.use_cuda)
 
-    x = os.walk(args.image_path)
 
-    for root, dirs, filename in x:
+    for root, dirs, filename in os.walk(args.image_path):
         # print(type(grad_cam))
         print(filename)
 
         for s in filename:
-            image.append(cv2.imread(args.image_path + s, 1))
+            if s.endswith(".png") or s.endswith(".jpg"):
+                image.append(cv2.imread(args.image_path + s, 1))
 
         for img in image:
             img = np.float32(cv2.resize(img, (224, 224))) / 255
@@ -227,4 +236,4 @@ if __name__ == '__main__':
 
             i +=1
 
-            show_cam_on_image(img, mask, i)
+            show_cam_on_image(img, mask, i, args.save_image_path)

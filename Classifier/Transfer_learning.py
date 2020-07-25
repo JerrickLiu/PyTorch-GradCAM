@@ -19,8 +19,8 @@ from torchvision.datasets import ImageFolder
 epochs = 2
 batch_size = 10
 learning_rate = 0.003
-data_path = '/Users/SirJerrick/Downloads/Plant_Seedlings_Data/plant-seedlings-classification/train/'
-test_data_path = '/Users/SirJerrick/Downloads/Plant_seedlings_data_test/'
+data_path = ./datset
+test_data_path = ./test_data
 validation_split = .2
 shuffle_dataset = True
 random_seed = 42
